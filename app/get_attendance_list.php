@@ -6,6 +6,7 @@ if(isset($_POST["class_id"]) && isset($_POST["get"]) && isset($_POST["account_id
     $get = $_POST["get"];
     $account_id = $_POST["account_id"];
     $device_id = $_POST["device_id"];
+    $cur_timestamp = time();
 
 
 
@@ -17,7 +18,7 @@ if(isset($_POST["class_id"]) && isset($_POST["get"]) && isset($_POST["account_id
         $account_type = $account_fetch['type'];
 
         if(strpos($get, 'total') !== false){
-            $sql = mysqli_query($conn,"SELECT * FROM `attendance_info` WHERE class_id='$class_id' ORDER BY date DESC");
+            $sql = mysqli_query($conn,"SELECT * FROM `attendance_info` WHERE class_id='$class_id' ORDER BY start DESC");
             
             $rows = mysqli_num_rows($sql);
             
@@ -27,7 +28,19 @@ if(isset($_POST["class_id"]) && isset($_POST["get"]) && isset($_POST["account_id
             
             $start = $_POST["start"];
 
-            $sql = mysqli_query($conn,"SELECT * FROM `attendance_info` WHERE class_id='$class_id' ORDER BY date DESC LIMIT $start, 20");
+            //$sql = mysqli_query($conn,"SELECT * FROM `attendance_info` WHERE class_id='$class_id' ORDER BY start DESC LIMIT $start, 20");
+            /*$sql = mysqli_query($conn,"(SELECT * FROM `attendance_info` WHERE start>$cur_timestamp AND end>$cur_timestamp ORDER BY start DESC
+                    UNION
+                    SELECT * FROM `attendance_info` WHERE start<$cur_timestamp AND end>$cur_timestamp
+                    UNION
+                    SELECT * FROM `attendance_info` WHERE start<$cur_timestamp AND end<$cur_timestamp) LIMIT $start, 20");
+            */
+            $sql = mysqli_query($conn,"(SELECT *, 1 as status FROM `attendance_info` WHERE start>$cur_timestamp AND end>$cur_timestamp AND class_id='$class_id'
+                    UNION 
+                    SELECT *, 2 as status FROM `attendance_info` WHERE start<$cur_timestamp AND end>$cur_timestamp AND class_id='$class_id'
+                    UNION
+                    SELECT *, 3 as status FROM `attendance_info` WHERE start<$cur_timestamp AND end<$cur_timestamp AND class_id='$class_id') 
+                    ORDER BY status ASC, start DESC LIMIT $start, 20");
             
             $rows = mysqli_num_rows($sql);
             
@@ -48,52 +61,52 @@ if(isset($_POST["class_id"]) && isset($_POST["get"]) && isset($_POST["account_id
                         $start = $fetch['start'];
                         $end = $fetch['end'];
 
-                        $start_year = date("Y", strtotime($start)); 
-                        $start_month = date("F", strtotime($start)); 
-                        $start_day = date("d", strtotime($start)); 
+                        $start_year = date("Y", $start); 
+                        $start_month = date("F", $start); 
+                        $start_day = date("d", $start); 
 
-                        $end_year = date("Y", strtotime($end)); 
-                        $end_month = date("F", strtotime($end)); 
-                        $end_day = date("d", strtotime($end)); 
+                        $end_year = date("Y", $end); 
+                        $end_month = date("F", $end); 
+                        $end_day = date("d", $end); 
 
 
                         if($start_year == $end_year){
                             if($start_month == $end_month){
                                 if($start_day == $end_day){
-                                    $title_txt = date("F d, Y", strtotime($start));
+                                    $title_txt = date("F d, Y", $start);
 
-                                    $month_txt = strtoupper(date("M", strtotime($start)));
-                                    $day_txt = date("d", strtotime($start));
+                                    $month_txt = strtoupper(date("M", $start));
+                                    $day_txt = date("d", $start);
 
-                                    $start_txt = date("h:i:s a", strtotime($start));
-                                    $end_txt = date("h:i:s a", strtotime($end));
+                                    $start_txt = date("h:i a", $start);
+                                    $end_txt = date("h:i a", $end);
                                 }else{
-                                    $title_txt = date("F d", strtotime($start))." - ".date("d, Y", strtotime($end));
+                                    $title_txt = date("F d", $start)." - ".date("d, Y", $end);
 
-                                    $month_txt = strtoupper(date("M", strtotime($start)));
-                                    $day_txt = date("d", strtotime($start));
+                                    $month_txt = strtoupper(date("M", $start));
+                                    $day_txt = date("d", $start);
 
-                                    $start_txt = date("F d, Y H:i:s", strtotime($start));
-                                    $end_txt = date("F d, Y H:i:s", strtotime($end));
+                                    $start_txt = date("F d, Y h:i a", $start);
+                                    $end_txt = date("F d, Y h:i a", $end);
                                 }
                             }else{
-                                $title_txt = date("F d ", strtotime($start)) . " - ". date("F d, Y", strtotime($end));
+                                $title_txt = date("F d ", $start) . " - ". date("F d, Y", $end);
 
-                                $month_txt = strtoupper(date("M", strtotime($start)));
-                                $day_txt = date("d", strtotime($start));
+                                $month_txt = strtoupper(date("M", $start));
+                                $day_txt = date("d", $start);
 
-                                $start_txt = date("F d, Y H:i:s", strtotime($start));
-                                $end_txt = date("F d, Y H:i:s", strtotime($end));
+                                $start_txt = date("F d, Y h:i a", $start);
+                                $end_txt = date("F d, Y h:i a", $end);
                             }
 
                         }else{
-                            $title_txt = date("F d, Y", strtotime($start)) . " - ". date("F d, Y", strtotime($end));
+                            $title_txt = date("F d, Y", $start) . " - ". date("F d, Y", $end);
 
-                            $month_txt = strtoupper(date("M", strtotime($start)));
-                            $day_txt = date("d", strtotime($start));
+                            $month_txt = strtoupper(date("M", $start));
+                            $day_txt = date("d", $start);
 
-                            $start_txt = date("F d, Y H:i:s", strtotime($start));
-                            $end_txt = date("F d, Y H:i:s", strtotime($end));
+                            $start_txt = date("F d, Y h:i a", $start);
+                            $end_txt = date("F d, Y h:i a", $end);
                         }
 
 
@@ -116,6 +129,8 @@ if(isset($_POST["class_id"]) && isset($_POST["get"]) && isset($_POST["account_id
                             "end":"'.$end_txt.'",
 
                             "edited":"'.$fetch['edited'].'",
+
+                            "status":"'.$fetch['status'].'",
 
                             "date":"'.$fetch['date'].'"
 

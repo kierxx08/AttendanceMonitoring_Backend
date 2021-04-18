@@ -38,7 +38,7 @@ if(isset($_POST["start_timestamp"]) && isset($_POST["end_timestamp"]) && isset($
 
 
                 $sql_attendance = "INSERT INTO `attendance_info`(`attendance_id`, `class_id`, `start`, `end`, `edited`, `date`) 
-                VALUES ('$gen_attendance_ID','$class_id','$start_date','$end_date','false','$date')";
+                VALUES ('$gen_attendance_ID','$class_id','$start_timestamp','$end_timestamp','false','$date')";
                 if(mysqli_query($conn,$sql_attendance)){
 
                     $myObj->error = false;
